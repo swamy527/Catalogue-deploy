@@ -21,14 +21,12 @@ pipeline {
     stages {
         stage('version-scan') {
             steps {
-                script {
-                    def props = readJSON file: 'package.json'
-                    packageVersion = props.version
-                    echo "application version is ${packageVersion}"
-                }
+              """
+                 echo "print the version is ${params.version}
+                 echo "print the environment is ${params.environment}
+              """
             }
         }
-
     }
     post {
         always {
