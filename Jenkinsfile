@@ -22,8 +22,8 @@ pipeline {
         stage('version-scan') {
             steps {
               sh """
-                 echo "print the version is ${params.version}
-                 echo "print the environment is ${params.environment}
+                 echo "print the version is ${params.version}"
+                 echo "print the environment is ${params.environment}"
               """
             }
         }
