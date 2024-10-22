@@ -13,6 +13,7 @@ pipeline {
         // Timeout counter starts AFTER agent is allocated
         timeout(time: 1, unit: 'HOURS')
         disableConcurrentBuilds()
+        ansiColor('xterm')
     }
     parameters {
         string(name: 'version', defaultValue: '1.0.0', description: 'what is version?')
@@ -24,6 +25,13 @@ pipeline {
               sh """
                  echo "print the version is ${params.version}"
                  echo "print the environment is ${params.environment}"
+              """
+            }
+        }
+        stage('terraform-init') {
+            steps {
+              sh """
+                 terraform init
               """
             }
         }

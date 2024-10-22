@@ -51,7 +51,7 @@ resource "null_resource" "catalogue" {
     # Bootstrap script called with private_ip of each node in the cluster
     inline = [
       "chmod +x /tmp/bootstrap.sh",
-      "sudo sh /tmp/bootstrap.sh catalogue dev"
+      "sudo sh /tmp/bootstrap.sh catalogue dev ${var.app_version}"
     ]
   }
 }
@@ -83,7 +83,7 @@ resource "null_resource" "catalogue_delete" {
 }
 
 resource "aws_launch_template" "catalogue" {
-  name = "${var.project_name}-${var.environment}-template"
+  name = "${var.project_name}-${var.environment}-${var.app_version}"
 
   image_id                             = aws_ami_from_instance.catalogue.id
   instance_initiated_shutdown_behavior = "terminate"

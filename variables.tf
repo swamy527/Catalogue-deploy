@@ -9,3 +9,8 @@ variable "environment" {
 variable "zone_name" {
   default = "beesh.life"
 }
+
+
+variable "app_version" {
+
+}
