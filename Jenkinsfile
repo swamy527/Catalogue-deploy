@@ -35,6 +35,13 @@ pipeline {
               """
             }
         }
+        stage('terraform-apply') {
+            steps {
+              sh """
+                 terraform apply -var="app_version=${params.version}" -auto-approve
+              """
+            }
+        }
     }
     post {
         always {
