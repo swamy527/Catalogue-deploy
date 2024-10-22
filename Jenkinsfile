@@ -38,7 +38,7 @@ pipeline {
         stage('terraform-apply') {
             steps {
               sh """
-                 terraform apply -var="app_version=${params.version}" -auto-approve
+                 terraform destroy -var="app_version=${params.version}" -auto-approve
               """
             }
         }
