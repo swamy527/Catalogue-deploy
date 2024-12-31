@@ -46,15 +46,12 @@ pipeline {
             }
             steps {
               sh """
-                 terraform apply -var="app_version=${params.version}" -auto-approve
+                 terraform plan -var="app_version=${params.version}"
               """
             }
         }
     }
     post {
-        always {
-            deleteDir()
-        } 
         success {
             echo 'I succeeded!'
         }
