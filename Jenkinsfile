@@ -16,6 +16,9 @@ pipeline {
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
+    environment {
+        AWS_SHARED_CREDENTIALS_FILE = '/root/.aws/credentials'
+    }
     parameters {
         string(name: 'version', defaultValue: '1.0.0', description: 'what is version?')
         string(name: 'environment', defaultValue: 'dev', description: 'what is environment?')
