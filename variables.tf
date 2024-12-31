@@ -1,4 +1,4 @@
-variable "project_name" {
+variable "project" {
   default = "roboshop"
 }
 
@@ -6,11 +6,10 @@ variable "environment" {
   default = "dev"
 }
 
-variable "zone_name" {
-  default = "beesh.life"
+variable "centos" {
+  default = "ami-0b4f379183e5706b9"
 }
 
-
-variable "app_version" {
-
+variable "zone_name" {
+  default = "beesh.life"
 }

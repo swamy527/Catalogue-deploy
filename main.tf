@@ -1,115 +1,112 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 resource "aws_lb_target_group" "catalogue" {
-  name     = "${var.project_name}-${var.environment}-catalogue"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = data.aws_ssm_parameter.vpc_id.value
+  name     = "catalogue-target"
+  port     = 8080   # The port your targets will listen on
+  protocol = "HTTP" # Can be HTTP, HTTPS, TCP, or TLS
+
+  # Health check configuration
   health_check {
-    healthy_threshold   = 2
-    interval            = 10
-    unhealthy_threshold = 3
-    timeout             = 5
+    healthy_threshold   = 3
+    interval            = 30
     path                = "/health"
     port                = 8080
-    matcher             = "200-299"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 3
   }
+
+  # Set the target type
+  target_type = "instance" # Other options: "ip", "lambda"
+
+  # The VPC ID where the target group will be located
+  vpc_id = data.aws_ssm_parameter.vpcid.value
 }
 
-
-module "catalogue" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  ami                    = data.aws_ami.centos8.id
-  name                   = "${var.project_name}-${var.environment}-catalogue"
+resource "aws_instance" "catalogue" {
+  ami                    = var.centos
   instance_type          = "t2.micro"
-  vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
-  subnet_id              = element(split(",", data.aws_ssm_parameter.private_subnet_ids.value), 0)
+  vpc_security_group_ids = [data.aws_ssm_parameter.sgid.value]
+  subnet_id              = element(split(",", data.aws_ssm_parameter.private.value), 0)
   tags = {
-    Name = "${var.project_name}-${var.environment}-catalogue"
+    Name = "catalogue"
   }
 }
-
 resource "null_resource" "catalogue" {
-  # Changes to any instance of the cluster requires re-provisioning
   triggers = {
-    instance_id = module.catalogue.id
+    instance_id = aws_instance.catalogue.id
   }
-
-  # Bootstrap script can run on any instance of the cluster
-  # So we just choose the first in this case
   connection {
-    type     = "ssh"
-    host     = module.catalogue.private_ip
+    host     = aws_instance.catalogue.private_ip
     user     = "centos"
     password = "DevOps321"
+    type     = "ssh"
   }
-
-  provisioner "file" {
-    source      = "bootstrap.sh"
-    destination = "/tmp/bootstrap.sh"
-  }
-
   provisioner "remote-exec" {
-    # Bootstrap script called with private_ip of each node in the cluster
-    inline = [
-      "chmod +x /tmp/bootstrap.sh",
-      "sudo sh /tmp/bootstrap.sh catalogue dev ${var.app_version}"
-    ]
+    inline = ["sudo yum update -y",
+      "sudo yum install ansible -y",
+    "ansible-pull -U https://github.com/swamy527/roboshop-ansible-roles-tf.git -e component=catalogue main-tf.yaml"]
   }
+
 }
 
 resource "aws_ec2_instance_state" "catalogue" {
-  instance_id = module.catalogue.id
+  instance_id = aws_instance.catalogue.id
   state       = "stopped"
   depends_on  = [null_resource.catalogue]
 }
 
 resource "aws_ami_from_instance" "catalogue" {
-  name               = "${var.project_name}-${var.environment}-catalogue-${local.current_time}"
-  source_instance_id = module.catalogue.id
+  name               = "catalogue-ami-${local.current_time}"
+  source_instance_id = aws_instance.catalogue.id
   depends_on         = [aws_ec2_instance_state.catalogue]
 }
 
 resource "null_resource" "catalogue_delete" {
   # Changes to any instance of the cluster requires re-provisioning
-  triggers = {
-    instance_id = module.catalogue.id
-  }
+  #   triggers = {
+  #     instance_id = module.catalogue.id
+  #   }
 
   provisioner "local-exec" {
     # Bootstrap script called with private_ip of each node in the cluster
-    command = "aws ec2 terminate-instances --instance-ids ${module.catalogue.id}"
+    command = "aws ec2 terminate-instances --instance-ids ${aws_instance.catalogue.id}"
   }
 
   depends_on = [aws_ami_from_instance.catalogue]
 }
 
 resource "aws_launch_template" "catalogue" {
-  name = "${var.project_name}-${var.environment}-${var.app_version}"
+  name = "${var.project}-${var.environment}-catalogue"
 
   image_id                             = aws_ami_from_instance.catalogue.id
   instance_initiated_shutdown_behavior = "terminate"
   instance_type                        = "t2.micro"
   update_default_version               = true
 
-  vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
+  vpc_security_group_ids = [data.aws_ssm_parameter.sgid.value]
 
   tag_specifications {
     resource_type = "instance"
 
     tags = {
-      Name = "${var.project_name}-${var.environment}-template"
+      Name = "${var.project}-${var.environment}-template"
     }
   }
 
 }
 
+
 resource "aws_autoscaling_group" "catalogue" {
-  name                      = "${var.project_name}-${var.environment}"
+  name                      = "${var.project}-${var.environment}-catalogue"
   max_size                  = 5
   min_size                  = 1
   health_check_grace_period = 60
   health_check_type         = "ELB"
   desired_capacity          = 2
-  vpc_zone_identifier       = split(",", data.aws_ssm_parameter.private_subnet_ids.value)
+  vpc_zone_identifier       = split(",", data.aws_ssm_parameter.private.value)
   target_group_arns         = [aws_lb_target_group.catalogue.arn]
 
   launch_template {
@@ -127,7 +124,7 @@ resource "aws_autoscaling_group" "catalogue" {
 
   tag {
     key                 = "Name"
-    value               = "${var.project_name}-${var.environment}-catalogue"
+    value               = "${var.project}-${var.environment}-catalogue"
     propagate_at_launch = true
   }
 
@@ -148,14 +145,14 @@ resource "aws_lb_listener_rule" "catalogue" {
 
   condition {
     host_header {
-      values = ["catalogue.dev.${var.zone_name}"]
+      values = ["catalogue.${var.zone_name}"]
     }
   }
 }
 
 resource "aws_autoscaling_policy" "catalogue" {
   autoscaling_group_name = aws_autoscaling_group.catalogue.name
-  name                   = "${var.project_name}-${var.environment}"
+  name                   = "${var.project}-${var.environment}"
   policy_type            = "TargetTrackingScaling"
 
   target_tracking_configuration {

@@ -1,9 +1,10 @@
 pipeline {
-    agent {
-        node {
-           label 'Agent-1'   
-        }
-    }
+    agent any
+    // {
+    //     node {
+    //        label 'Agent-1'   
+    //     }
+    // }
     // environment {
     //     packageVersion = ''
     //     nexurl = '3.80.129.216:8081'
