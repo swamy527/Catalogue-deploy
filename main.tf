@@ -47,7 +47,7 @@ resource "null_resource" "catalogue" {
   provisioner "remote-exec" {
     inline = ["sudo yum update -y",
       "sudo yum install ansible -y",
-    "ansible-pull -U https://github.com/swamy527/roboshop-ansible-roles-tf.git -e component=catalogue main-tf.yaml"]
+    "ansible-pull -U https://github.com/swamy527/roboshop-ansible-roles-tf.git -e component=catalogue -e app_version=${var.app_version} main-tf.yaml"]
   }
 
 }
