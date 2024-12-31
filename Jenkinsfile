@@ -38,12 +38,12 @@ pipeline {
         }
         stage('terraform-apply') {
             input {
-                message: "should we proceed?"
-                ok: "yes deploy" 
+                message "should we proceed?"
+                ok "yes deploy" 
             }
             steps {
               sh """
-                 terraform destroy -var="app_version=${params.version}" -auto-approve
+                 terraform apply -var="app_version=${params.version}" -auto-approve
               """
             }
         }
