@@ -43,10 +43,8 @@ pipeline {
                 message "should we proceed?"
                 ok "yes deploy" 
             }
-            steps {
-              sh """
-                 terraform apply -var="app_version=${params.version}"
-              """
+            steps {   
+               sh 'terraform apply -var="app_version=${params.version}"'
             }
         }
     }
