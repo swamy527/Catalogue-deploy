@@ -15,9 +15,9 @@ pipeline {
         disableConcurrentBuilds()
         ansiColor('xterm')
     }
-    environment {
-        AWS_SHARED_CREDENTIALS_FILE = '/root/.aws/credentials'
-    }
+    // environment {
+    //     AWS_SHARED_CREDENTIALS_FILE = '/root/.aws/credentials'
+    // }
     parameters {
         string(name: 'version', defaultValue: '1.0.0', description: 'what is version?')
         string(name: 'environment', defaultValue: 'dev', description: 'what is environment?')
@@ -43,8 +43,10 @@ pipeline {
                 message "should we proceed?"
                 ok "yes deploy" 
             }
-            steps {   
-               sh 'terraform apply -var="app_version=${params.version}"'
+            steps { 
+               withAWS(credentials: 'aws-auth') {
+                 sh  "terraform apply -var=app_version=${params.version}"
+               }       
             }
         }
     }
