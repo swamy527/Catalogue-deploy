@@ -21,7 +21,7 @@ pipeline {
     parameters {
         string(name: 'version', defaultValue: '1.0.0', description: 'what is version?')
         string(name: 'environment', defaultValue: 'dev', description: 'what is environment?')
-        choice(name: 'action', choices: ['apply', 'destory'],description: 'Select the environment to deploy')
+        choice(name: 'action', choices: ['apply', 'destroy'],description: 'Select the environment to deploy')
     }
     stages {
         stage('version-scan') {
