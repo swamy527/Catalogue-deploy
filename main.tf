@@ -145,7 +145,7 @@ resource "aws_lb_listener_rule" "catalogue" {
 
   condition {
     host_header {
-      values = ["catalogue.${var.zone_name}"]
+      values = ["catalogue.${var.environment}.${var.zone_name}"]
     }
   }
 }
