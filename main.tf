@@ -79,7 +79,7 @@ resource "null_resource" "catalogue_delete" {
 }
 
 resource "aws_launch_template" "catalogue" {
-  name = "${var.project}-${var.environment}-catalogue"
+  name = "${var.project_name}-${var.environment}-catalogue"
 
   image_id                             = aws_ami_from_instance.catalogue.id
   instance_initiated_shutdown_behavior = "terminate"
@@ -92,7 +92,7 @@ resource "aws_launch_template" "catalogue" {
     resource_type = "instance"
 
     tags = {
-      Name = "${var.project}-${var.environment}-template"
+      Name = "${var.project_name}-${var.environment}-template"
     }
   }
 
@@ -100,7 +100,7 @@ resource "aws_launch_template" "catalogue" {
 
 
 resource "aws_autoscaling_group" "catalogue" {
-  name                      = "${var.project}-${var.environment}-catalogue"
+  name                      = "${var.project_name}-${var.environment}-catalogue"
   max_size                  = 5
   min_size                  = 1
   health_check_grace_period = 60
@@ -124,7 +124,7 @@ resource "aws_autoscaling_group" "catalogue" {
 
   tag {
     key                 = "Name"
-    value               = "${var.project}-${var.environment}-catalogue"
+    value               = "${var.project_name}-${var.environment}-catalogue"
     propagate_at_launch = true
   }
 
@@ -152,7 +152,7 @@ resource "aws_lb_listener_rule" "catalogue" {
 
 resource "aws_autoscaling_policy" "catalogue" {
   autoscaling_group_name = aws_autoscaling_group.catalogue.name
-  name                   = "${var.project}-${var.environment}"
+  name                   = "${var.project_name}-${var.environment}"
   policy_type            = "TargetTrackingScaling"
 
   target_tracking_configuration {

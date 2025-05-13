@@ -45,9 +45,7 @@ pipeline {
                 ok "yes go ahead" 
             }
             steps { 
-               withAWS(credentials: 'aws-auth') {
                  sh  "terraform ${params.action} -var=app_version=${params.version} -auto-approve"
-               }       
             }
         }
     }
