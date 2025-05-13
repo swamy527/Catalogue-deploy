@@ -28,7 +28,7 @@ pipeline {
             steps {
               sh """
                  echo "print the version is ${params.version}"
-                 echo "print the environment is ${params.environment}"
+                 aws sts get-caller-identity
               """
             }
         }
